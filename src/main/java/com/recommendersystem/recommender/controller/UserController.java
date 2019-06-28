@@ -20,45 +20,12 @@ import com.recommendersystem.recommender.models.User;
 import com.recommendersystem.recommender.repository.UserRepository;
 import com.recommendersystem.recommender.utils.StringUtil;
 
-@CrossOrigin(origins = "http://localhost:8100")
+@CrossOrigin
 @RestController
 @RequestMapping("/user")
 public class UserController {
 	@Autowired
 	private UserRepository repository;
-
-	@RequestMapping(value = "/", method = RequestMethod.GET)
-	public Map<String, Object> getAllUsers() {
-		Map<String, Object> response = new HashMap<>();
-
-		response.put("users", repository.findAll());
-		response.put("success", true);
-
-		return response;
-	}
-
-	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
-	public Map<String, Object> getUserById(@PathVariable("id") String id) {
-		Map<String, Object> response = new HashMap<>();
-
-		response.put("user", repository.findById(id));
-		response.put("success", true);
-
-		return response;
-	}
-
-	@RequestMapping(value = "/{id}", method = RequestMethod.PUT)
-	public Map<String, Object> modifyUserById(@PathVariable("id") ObjectId id, @Valid @RequestBody User user) {
-		user.set_id(id);
-		repository.save(user);
-
-		Map<String, Object> response = new HashMap<>();
-
-		response.put("user", user);
-		response.put("success", true);
-
-		return response;
-	}
 
 	@RequestMapping(value = "/", method = RequestMethod.POST)
 	public Map<String, Object> createUser(@Valid @RequestBody User user) {
@@ -97,13 +64,76 @@ public class UserController {
 
 		if (!userAux.isPresent()) {
 			response.put("message", "Usuário não encontrado!");
-			response.put("success", "false");
+			response.put("success", false);
 
 			return response;
 		}
 
 		repository.delete(userAux.get());
 
+		response.put("success", true);
+
+		return response;
+	}
+
+	@RequestMapping(value = "/", method = RequestMethod.GET)
+	public Map<String, Object> getAllUsers() {
+		Map<String, Object> response = new HashMap<>();
+
+		response.put("users", repository.findAll());
+		response.put("success", true);
+
+		return response;
+	}
+
+	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
+	public Map<String, Object> getUserById(@PathVariable("id") String id) {
+		Optional<User> userAux = repository.findById(id);
+
+		Map<String, Object> response = new HashMap<>();
+
+		if (!userAux.isPresent()) {
+			response.put("message", "Usuário não encontrado!");
+			response.put("success", false);
+
+			return response;
+		}
+
+		response.put("user", userAux.get());
+		response.put("success", true);
+
+		return response;
+	}
+
+	@RequestMapping(value = "/{id}", method = RequestMethod.PUT)
+	public Map<String, Object> modifyUserById(@PathVariable("id") String id, @Valid @RequestBody User user) {
+		Optional<User> userAux = repository.findById(id);
+
+		Map<String, Object> response = new HashMap<>();
+
+		if (!userAux.isPresent()) {
+			response.put("message", "Usuário não encontrado!");
+			response.put("success", false);
+
+			return response;
+		}
+
+		User userOld = userAux.get();
+
+		userOld.setEmail(user.getEmail());
+		userOld.setFullname(user.getFullname());
+		userOld.setIfsulStudent(user.getIfsulStudent());
+		userOld.setImage(user.getImage());
+
+		if (StringUtil.isNotBlank(user.getPassword())) {
+			userOld.setPassword(user.getPassword());
+		} else {
+			userOld.setPassword(userOld.getPassword());
+		}
+
+		repository.save(userOld);
+
+		response.put("user", userOld);
 		response.put("success", true);
 
 		return response;

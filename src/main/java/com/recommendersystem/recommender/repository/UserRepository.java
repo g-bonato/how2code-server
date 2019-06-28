@@ -8,8 +8,10 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import com.recommendersystem.recommender.models.User;
 
 public interface UserRepository extends MongoRepository<User, String> {
-	public Optional<User> findById(String id);
-
 	public List<User> findByEmail(String email);
+
 	public List<User> findByEmailAndPassword(String email, String password);
+
+	@Override
+	public Optional<User> findById(String id);
 }

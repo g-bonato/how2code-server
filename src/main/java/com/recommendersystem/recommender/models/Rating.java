@@ -1,18 +1,20 @@
 package com.recommendersystem.recommender.models;
 
 import java.util.Calendar;
-import java.util.List;
 
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 
 public class Rating {
 	@Id
 	private ObjectId _id;
+	@Indexed(unique = true)
+	private String id;
 	private Double rating;
 	private Calendar lastUpdate;
-	private ObjectId userId;
-	private List<LearningMaterial> learningMaterials;
+	private String userId;
+	private LearningMaterial learningMaterial;
 
 	public Rating() {
 
@@ -22,40 +24,44 @@ public class Rating {
 		return _id;
 	}
 
-	public void set_id(ObjectId _id) {
-		this._id = _id;
-	}
-
-	public Double getRating() {
-		return rating;
-	}
-
-	public void setRating(Double rating) {
-		this.rating = rating;
+	public String getId() {
+		return id;
 	}
 
 	public Calendar getLastUpdate() {
 		return lastUpdate;
 	}
 
+	public LearningMaterial getLearningMaterial() {
+		return learningMaterial;
+	}
+
+	public Double getRating() {
+		return rating;
+	}
+
+	public String getUserId() {
+		return userId;
+	}
+
+	public void set_id(ObjectId _id) {
+		this._id = _id;
+		this.id = _id.toHexString();
+	}
+
 	public void setLastUpdate(Calendar lastUpdate) {
 		this.lastUpdate = lastUpdate;
 	}
 
-	public ObjectId getUserId() {
-		return userId;
+	public void setLearningMaterial(LearningMaterial learningMaterial) {
+		this.learningMaterial = learningMaterial;
 	}
 
-	public void setUserId(ObjectId userId) {
+	public void setRating(Double rating) {
+		this.rating = rating;
+	}
+
+	public void setUserId(String userId) {
 		this.userId = userId;
 	}
-
-	public List<LearningMaterial> getLearningMaterials() {
-		return learningMaterials;
-	}
-
-	public void setLearningMaterials(List<LearningMaterial> learningMaterials) {
-		this.learningMaterials = learningMaterials;
-	}
-
 }
