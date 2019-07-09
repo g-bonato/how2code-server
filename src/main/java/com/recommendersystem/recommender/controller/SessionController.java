@@ -17,4 +17,8 @@ public class SessionController {
 
 		return session;
 	}
+
+	public static boolean isValidSession(String sessionId, String userId) {
+		return true;
+	}
 }

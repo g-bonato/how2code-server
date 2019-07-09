@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.bson.types.ObjectId;
@@ -28,7 +30,7 @@ public class UserController {
 	private UserRepository repository;
 
 	@RequestMapping(value = "/", method = RequestMethod.POST)
-	public Map<String, Object> createUser(@Valid @RequestBody User user) {
+	public Map<String, Object> createUser(@Valid @RequestBody User user, HttpServletResponse httpResponse) {
 		Map<String, Object> response = new HashMap<>();
 
 		if (StringUtil.isBlank(user.getEmail()) || StringUtil.isBlank(user.getPassword())) {
@@ -49,6 +51,9 @@ public class UserController {
 
 		user.setSession(SessionController.createSession());
 		repository.save(user);
+
+		httpResponse.addCookie(new Cookie("session", user.getSession().getSessionId()));
+		httpResponse.addCookie(new Cookie("userId", user.getId()));
 
 		response.put("user", user);
 		response.put("success", true);
@@ -140,7 +145,7 @@ public class UserController {
 	}
 
 	@RequestMapping(value = "/login", method = RequestMethod.POST)
-	public Map<String, Object> userLogin(@RequestBody User userForLogin) {
+	public Map<String, Object> userLogin(@RequestBody User userForLogin, HttpServletResponse httpResponse) {
 		Map<String, Object> response = new HashMap<>();
 
 		List<User> users = repository.findByEmailAndPassword(userForLogin.getEmail(), userForLogin.getPassword());
@@ -158,6 +163,9 @@ public class UserController {
 
 		response.put("user", user);
 		response.put("success", true);
+
+		httpResponse.addCookie(new Cookie("session", user.getSession().getSessionId()));
+		httpResponse.addCookie(new Cookie("userId", user.getId()));
 
 		return response;
 	}

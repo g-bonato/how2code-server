@@ -11,7 +11,7 @@ public class Rating {
 	private ObjectId _id;
 	@Indexed(unique = true)
 	private String id;
-	private Double rating;
+	private Float rating;
 	private Calendar lastUpdate;
 	private String userId;
 	private LearningMaterial learningMaterial;
@@ -36,7 +36,7 @@ public class Rating {
 		return learningMaterial;
 	}
 
-	public Double getRating() {
+	public Float getRating() {
 		return rating;
 	}
 
@@ -57,7 +57,7 @@ public class Rating {
 		this.learningMaterial = learningMaterial;
 	}
 
-	public void setRating(Double rating) {
+	public void setRating(Float rating) {
 		this.rating = rating;
 	}
 

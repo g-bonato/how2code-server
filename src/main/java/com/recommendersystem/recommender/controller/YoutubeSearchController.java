@@ -2,7 +2,9 @@ package com.recommendersystem.recommender.controller;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
@@ -16,7 +18,7 @@ import com.recommendersystem.recommender.models.LearningMaterial;
 public class YoutubeSearchController {
 	private static final String API_KEY = "AIzaSyBkQYdTMHP2d7Ay2qa-75LiIB8A6RAdQpw";
 
-	public static List<LearningMaterial> getVideos(String query) {
+	public static Map<String, Object> getVideos(String query, String pageToken) {
 		try {
 			YouTube youtube = new YouTube.Builder(new NetHttpTransport(), new JacksonFactory(),
 					new HttpRequestInitializer() {
@@ -28,7 +30,12 @@ public class YoutubeSearchController {
 
 			search.setKey(API_KEY);
 			search.setQ(query);
-			search.setMaxResults((long) 10);
+
+			if (pageToken != null) {
+				search.setPageToken(pageToken);
+			}
+
+			search.setMaxResults((long) 50);
 			search.setType("video");
 			search.setOrder("rating");
 			search.setFields("items(id/videoId,snippet/title,snippet/thumbnails/default/url)");
@@ -47,7 +54,12 @@ public class YoutubeSearchController {
 				learningMaterials.add(learningMaterial);
 			}
 
-			return learningMaterials;
+			Map<String, Object> response = new HashMap<String, Object>();
+
+			response.put("learningMaterials", learningMaterials);
+			response.put("nextPageToken", searchResponse.getNextPageToken());
+
+			return response;
 		} catch (Exception e) {
 			System.err.println("Failed getting YoutubeVideos: " + e);
 			return null;
