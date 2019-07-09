@@ -26,45 +26,45 @@ public class MahoutTest {
 
 			List<Preference> pref1 = new ArrayList<Preference>();
 
-			pref1.add(new GenericPreference(1, 10, 1.0f));
-			pref1.add(new GenericPreference(1, 11, 2.0f));
-			pref1.add(new GenericPreference(1, 12, 5.0f));
-			pref1.add(new GenericPreference(1, 13, 5.0f));
-			pref1.add(new GenericPreference(1, 14, 5.0f));
-			pref1.add(new GenericPreference(1, 15, 4.0f));
-			pref1.add(new GenericPreference(1, 16, 5.0f));
+			pref1.add(new GenericPreference(1, 10, -1.0f));
+			pref1.add(new GenericPreference(1, 11, -1.0f));
+			pref1.add(new GenericPreference(1, 12, 1.0f));
+			pref1.add(new GenericPreference(1, 13, -1.0f));
+			pref1.add(new GenericPreference(1, 14, -1.0f));
+			pref1.add(new GenericPreference(1, 15, -1.0f));
+			pref1.add(new GenericPreference(1, 16, 1.0f));
 			pref1.add(new GenericPreference(1, 17, 1.0f));
-			pref1.add(new GenericPreference(1, 18, 5.0f));
+			pref1.add(new GenericPreference(1, 18, 1.0f));
 
 			List<Preference> pref2 = new ArrayList<Preference>();
 
 			pref2.add(new GenericPreference(2, 10, 1.0f));
-			pref2.add(new GenericPreference(2, 15, 5.0f));
-			pref2.add(new GenericPreference(2, 16, 4.5f));
-			pref2.add(new GenericPreference(2, 17, 1.0f));
-			pref2.add(new GenericPreference(2, 18, 5.0f));
+			pref2.add(new GenericPreference(2, 15, -1.0f));
+			pref2.add(new GenericPreference(2, 16, 1.0f));
+			pref2.add(new GenericPreference(2, 17, -1.0f));
+			pref2.add(new GenericPreference(2, 18, 1.0f));
 
 			List<Preference> pref3 = new ArrayList<Preference>();
 
-			pref3.add(new GenericPreference(3, 11, 2.5f));
-			pref3.add(new GenericPreference(3, 12, 4.5f));
-			pref3.add(new GenericPreference(3, 13, 5.0f));
-			pref3.add(new GenericPreference(3, 14, 3.0f));
-			pref3.add(new GenericPreference(3, 15, 3.5f));
-			pref3.add(new GenericPreference(3, 16, 4.5f));
-			pref3.add(new GenericPreference(3, 17, 4.0f));
-			pref3.add(new GenericPreference(3, 18, 5.0f));
+			pref3.add(new GenericPreference(3, 11, 1.0f));
+			pref3.add(new GenericPreference(3, 12, -1.0f));
+			pref3.add(new GenericPreference(3, 13, 1.0f));
+			pref3.add(new GenericPreference(3, 14, 1.0f));
+			pref3.add(new GenericPreference(3, 15, -1.0f));
+			pref3.add(new GenericPreference(3, 16, -1.0f));
+			pref3.add(new GenericPreference(3, 17, -1.0f));
+			pref3.add(new GenericPreference(3, 18, 1.0f));
 
 			List<Preference> pref4 = new ArrayList<Preference>();
 
-			pref4.add(new GenericPreference(4, 10, 5.0f));
-			pref4.add(new GenericPreference(4, 11, 5.0f));
-			pref4.add(new GenericPreference(4, 12, 5.0f));
-			pref4.add(new GenericPreference(4, 13, 0.0f));
-			pref4.add(new GenericPreference(4, 14, 2.0f));
-			pref4.add(new GenericPreference(4, 15, 3.0f));
-			pref4.add(new GenericPreference(4, 16, 1.0f));
-			pref4.add(new GenericPreference(4, 17, 4.0f));
+			pref4.add(new GenericPreference(4, 10, 1.0f));
+			pref4.add(new GenericPreference(4, 11, -1.0f));
+			pref4.add(new GenericPreference(4, 12, -1.0f));
+			pref4.add(new GenericPreference(4, 13, 1.0f));
+			pref4.add(new GenericPreference(4, 14, 1.0f));
+			pref4.add(new GenericPreference(4, 15, -1.0f));
+			pref4.add(new GenericPreference(4, 16, -1.0f));
+			pref4.add(new GenericPreference(4, 17, -1.0f));
 			pref4.add(new GenericPreference(4, 18, 1.0f));
 
 			userData.put(1, new GenericUserPreferenceArray(pref1));
@@ -76,7 +76,7 @@ public class MahoutTest {
 
 			UserSimilarity similarity = new PearsonCorrelationSimilarity(model);
 
-			UserNeighborhood neighborhood = new ThresholdUserNeighborhood(0.1, similarity, model);
+			UserNeighborhood neighborhood = new ThresholdUserNeighborhood(-1.0, similarity, model);
 
 			UserBasedRecommender recommender = new GenericUserBasedRecommender(model, neighborhood, similarity);
 

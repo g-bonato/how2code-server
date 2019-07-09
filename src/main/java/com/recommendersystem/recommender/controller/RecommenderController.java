@@ -5,11 +5,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.FastByIDMap;
+import org.apache.mahout.cf.taste.impl.model.GenericDataModel;
 import org.apache.mahout.cf.taste.impl.model.GenericPreference;
 import org.apache.mahout.cf.taste.impl.model.GenericUserPreferenceArray;
+import org.apache.mahout.cf.taste.impl.neighborhood.ThresholdUserNeighborhood;
+import org.apache.mahout.cf.taste.impl.recommender.GenericUserBasedRecommender;
+import org.apache.mahout.cf.taste.impl.similarity.PearsonCorrelationSimilarity;
+import org.apache.mahout.cf.taste.model.DataModel;
 import org.apache.mahout.cf.taste.model.Preference;
 import org.apache.mahout.cf.taste.model.PreferenceArray;
+import org.apache.mahout.cf.taste.neighborhood.UserNeighborhood;
+import org.apache.mahout.cf.taste.recommender.RecommendedItem;
+import org.apache.mahout.cf.taste.recommender.UserBasedRecommender;
+import org.apache.mahout.cf.taste.similarity.UserSimilarity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -39,7 +49,7 @@ public class RecommenderController {
 		String pageToken = null;
 		List<LearningMaterial> learningMaterials = new ArrayList<LearningMaterial>();
 
-		while (learningMaterials.size() < 20) {
+		while (learningMaterials.size() < 30) {
 			Map<String, Object> youtubeResponse = YoutubeSearchController.getVideos(query, pageToken);
 
 			if (!SessionController.isValidSession(sessionId, userId)) {
@@ -49,21 +59,40 @@ public class RecommenderController {
 				return response;
 			}
 
+			if (!learningMaterials.isEmpty()) {
+
+			}
+
+			pageToken = (String) youtubeResponse.get("nextPageToken");
+
+			List<String> youtubeVideoIds = getYoutubeVideoIds(youtubeResponse);
+
 			List<Rating> ratedByMe = ratingRepository.findByUserId(userId);
 
-			Map<Long, String> codeVideoId = new HashMap<Long, String>();
+			Map<Long, LearningMaterial> codeLearningMaterial = new HashMap<Long, LearningMaterial>();
 			Map<String, Long> videoIdCode = new HashMap<String, Long>();
 
 			FastByIDMap<PreferenceArray> userData = new FastByIDMap<PreferenceArray>();
 
-			getRatedByMeDataModel(ratedByMe, codeVideoId, videoIdCode, userData);
+			getRatedByMeDataModel(ratedByMe, codeLearningMaterial, videoIdCode, userData);
 
-			List<Rating> inCommonRatedItems = getInCommonRatedItems(ratedByMe);
+			List<Rating> inCommonRatedItems = getInCommonRatedItems(ratedByMe, youtubeVideoIds);
 
-			getRatedByAnotherUsersDataModel(inCommonRatedItems, videoIdCode, codeVideoId, userData);
+			getRatedByAnotherUsersDataModel(inCommonRatedItems, videoIdCode, codeLearningMaterial, userData);
 
-			// TODO: Fazer a chamada para a função de calculo de recomendação, validar o
-			// numero de itens, e se necessário, complementar com os videos do Youtube
+			try {
+				List<RecommendedItem> recommendedItems = getRecommendedItems(userData);
+
+				for (RecommendedItem recommendedItem : recommendedItems) {
+					learningMaterials.add(codeLearningMaterial.get(recommendedItem.getItemID()));
+				}
+
+				addYoutubeItemsInList(youtubeResponse, learningMaterials);
+
+			} catch (TasteException e) {
+				response.put("message", e.getMessage());
+				response.put("success", false);
+			}
 		}
 
 		response.put("videos", learningMaterials);
@@ -72,7 +101,7 @@ public class RecommenderController {
 		return response;
 	}
 
-	private void getRatedByMeDataModel(List<Rating> ratedByMe, Map<Long, String> codeVideoId,
+	private void getRatedByMeDataModel(List<Rating> ratedByMe, Map<Long, LearningMaterial> codeLearningMaterial,
 			Map<String, Long> videoIdCode, FastByIDMap<PreferenceArray> userData) {
 
 		Long cont = 1l;
@@ -80,7 +109,7 @@ public class RecommenderController {
 		List<Preference> preferences = new ArrayList<Preference>();
 
 		for (Rating rating : ratedByMe) {
-			codeVideoId.put(cont, rating.getLearningMaterial().getVideoId());
+			codeLearningMaterial.put(cont, rating.getLearningMaterial());
 			videoIdCode.put(rating.getLearningMaterial().getVideoId(), cont);
 
 			preferences.add(new GenericPreference(0, cont, rating.getRating()));
@@ -91,7 +120,7 @@ public class RecommenderController {
 		userData.put(0, new GenericUserPreferenceArray(preferences));
 	}
 
-	private List<Rating> getInCommonRatedItems(List<Rating> ratedByMe) {
+	private List<Rating> getInCommonRatedItems(List<Rating> ratedByMe, List<String> youtubeVideoIds) {
 		List<Rating> inCommonRatedItems = new ArrayList<Rating>();
 
 		for (Rating rating : ratedByMe) {
@@ -99,7 +128,9 @@ public class RecommenderController {
 					.findByVideoIdAndNotUserId(rating.getLearningMaterial().getVideoId(), rating.getUserId());
 
 			for (Rating ratingAux : ratingsAux) {
-				inCommonRatedItems.add(ratingAux);
+				if (youtubeVideoIds.contains(ratingAux.getLearningMaterial().getVideoId())) {
+					inCommonRatedItems.add(ratingAux);
+				}
 			}
 		}
 
@@ -107,7 +138,7 @@ public class RecommenderController {
 	}
 
 	private void getRatedByAnotherUsersDataModel(List<Rating> inCommonRatedItems, Map<String, Long> videoIdCode,
-			Map<Long, String> codeVideoId, FastByIDMap<PreferenceArray> userData) {
+			Map<Long, LearningMaterial> codeLearningMaterial, FastByIDMap<PreferenceArray> userData) {
 
 		List<String> alreadyProcessedUserId = new ArrayList<String>();
 
@@ -130,7 +161,7 @@ public class RecommenderController {
 				if (videoIdCode.containsKey(videoId)) {
 					preferences.add(new GenericPreference(userCont, videoIdCode.get(videoId), ratedValue));
 				} else {
-					codeVideoId.put(videoIdCont, rating.getLearningMaterial().getVideoId());
+					codeLearningMaterial.put(videoIdCont, rating.getLearningMaterial());
 					videoIdCode.put(rating.getLearningMaterial().getVideoId(), videoIdCont);
 
 					preferences.add(new GenericPreference(userCont, videoIdCont, ratedValue));
@@ -145,4 +176,30 @@ public class RecommenderController {
 		}
 	}
 
+	private List<RecommendedItem> getRecommendedItems(FastByIDMap<PreferenceArray> userData) throws TasteException {
+		DataModel model = new GenericDataModel(userData);
+		UserSimilarity similarity = new PearsonCorrelationSimilarity(model);
+		UserNeighborhood neighborhood = new ThresholdUserNeighborhood(-1.0, similarity, model);
+		UserBasedRecommender recommender = new GenericUserBasedRecommender(model, neighborhood, similarity);
+
+		return recommender.recommend(0, 30);
+	}
+
+	private List<String> getYoutubeVideoIds(Map<String, Object> youtubeResponse) {
+		List<String> youtubeVideoIds = new ArrayList<String>();
+
+		for (LearningMaterial item : (List<LearningMaterial>) youtubeResponse.get("learningMaterials")) {
+			youtubeVideoIds.add(item.getVideoId());
+		}
+
+		return youtubeVideoIds;
+	}
+
+	private void addYoutubeItemsInList(Map<String, Object> youtubeResponse, List<LearningMaterial> learningMaterials) {
+		for (LearningMaterial item : (List<LearningMaterial>) youtubeResponse.get("learningMaterials")) {
+			if (!learningMaterials.contains(item)) {
+				learningMaterials.add(item);
+			}
+		}
+	}
 }

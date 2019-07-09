@@ -52,8 +52,8 @@ public class UserController {
 		user.setSession(SessionController.createSession());
 		repository.save(user);
 
-		httpResponse.addCookie(new Cookie("session", user.getSession().getSessionId()));
-		httpResponse.addCookie(new Cookie("userId", user.getId()));
+		httpResponse.addCookie(getCookie("session", user.getSession().getSessionId()));
+		httpResponse.addCookie(getCookie("userId", user.getId()));
 
 		response.put("user", user);
 		response.put("success", true);
@@ -164,8 +164,8 @@ public class UserController {
 		response.put("user", user);
 		response.put("success", true);
 
-		httpResponse.addCookie(new Cookie("session", user.getSession().getSessionId()));
-		httpResponse.addCookie(new Cookie("userId", user.getId()));
+		httpResponse.addCookie(getCookie("session", user.getSession().getSessionId()));
+		httpResponse.addCookie(getCookie("userId", user.getId()));
 
 		return response;
 	}
@@ -192,5 +192,11 @@ public class UserController {
 		response.put("success", true);
 
 		return response;
+	}
+
+	private Cookie getCookie(String name, String value) {
+		Cookie c = new Cookie(name, value);
+		c.setPath("/");
+		return c;
 	}
 }

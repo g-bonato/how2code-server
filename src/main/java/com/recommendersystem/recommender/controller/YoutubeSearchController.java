@@ -38,7 +38,8 @@ public class YoutubeSearchController {
 			search.setMaxResults((long) 50);
 			search.setType("video");
 			search.setOrder("rating");
-			search.setFields("items(id/videoId,snippet/title,snippet/thumbnails/default/url)");
+			search.setPart("snippet");
+			search.setFields("nextPageToken,items(id/videoId,snippet/title,snippet/thumbnails/default/url)");
 
 			SearchListResponse searchResponse = search.execute();
 			List<SearchResult> searchResultList = searchResponse.getItems();
