@@ -35,7 +35,7 @@ public class YoutubeSearchController {
 				search.setPageToken(pageToken);
 			}
 
-			search.setMaxResults((long) 50);
+			search.setMaxResults((long) 10);
 			search.setType("video");
 			search.setOrder("rating");
 			search.setPart("snippet");
@@ -63,6 +63,37 @@ public class YoutubeSearchController {
 			return response;
 		} catch (Exception e) {
 			System.err.println("Failed getting YoutubeVideos: " + e);
+			return null;
+		}
+	}
+
+	public static String getNextPageToken(String query, String pageToken) {
+		try {
+			YouTube youtube = new YouTube.Builder(new NetHttpTransport(), new JacksonFactory(),
+					new HttpRequestInitializer() {
+						public void initialize(HttpRequest request) throws IOException {
+						}
+					}).setApplicationName("RecommenderSystem").build();
+
+			YouTube.Search.List search = youtube.search().list("id,snippet");
+
+			search.setKey(API_KEY);
+			search.setQ(query);
+
+			if (pageToken != null) {
+				search.setPageToken(pageToken);
+			}
+
+			search.setMaxResults((long) 50);
+			search.setType("video");
+			search.setOrder("rating");
+			search.setFields("nextPageToken");
+
+			SearchListResponse searchResponse = search.execute();
+
+			return searchResponse.getNextPageToken();
+		} catch (Exception e) {
+			System.err.println("Failed getting Youtube nextPageToken: " + e);
 			return null;
 		}
 	}

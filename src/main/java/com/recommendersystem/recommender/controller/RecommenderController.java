@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.FastByIDMap;
 import org.apache.mahout.cf.taste.impl.model.GenericDataModel;
@@ -32,6 +34,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.recommendersystem.recommender.models.LearningMaterial;
 import com.recommendersystem.recommender.models.Rating;
+import com.recommendersystem.recommender.processor.InCommonRatedItemUserId;
+import com.recommendersystem.recommender.processor.RatedYoutubeItemUserId;
 import com.recommendersystem.recommender.repository.RatingRepository;
 
 @CrossOrigin
@@ -39,20 +43,20 @@ import com.recommendersystem.recommender.repository.RatingRepository;
 @RequestMapping("/recommender")
 public class RecommenderController {
 	@Autowired
-	private RatingRepository ratingRepository;
+	private RatingRepository repository;
+	private List<Thread> threads = new ArrayList<Thread>();
 
 	@RequestMapping(value = "/{query}", method = RequestMethod.GET)
 	public Map<String, Object> getVideoRecommendation(@PathVariable("query") String query,
 			@CookieValue(value = "session", defaultValue = "") String sessionId,
-			@CookieValue(value = "userId", defaultValue = "") String userId) {
+			@CookieValue(value = "userId", defaultValue = "") String userId, HttpServletRequest httpRequest) {
 
-		userId = "5d26372034639428048bf125";
 		Map<String, Object> response = new HashMap<>();
 
 		String pageToken = null;
 		List<LearningMaterial> learningMaterials = new ArrayList<LearningMaterial>();
 
-		while (learningMaterials.size() < 30) {
+		while (learningMaterials.size() < 10) {
 			Map<String, Object> youtubeResponse = YoutubeSearchController.getVideos(query, pageToken);
 
 			pageToken = (String) youtubeResponse.get("nextPageToken");
@@ -64,9 +68,9 @@ public class RecommenderController {
 				return response;
 			}
 
-			List<LearningMaterial> youtubeItems = (List<LearningMaterial>) youtubeResponse.get("learningMaterials");
+			List<LearningMaterial> youtubeItems = new ArrayList<LearningMaterial>();
 
-			List<String> youtubeItemsVideoIds = getYoutubeVideoIds(youtubeItems);
+			youtubeItems = (List<LearningMaterial>) youtubeResponse.get("learningMaterials");
 
 			Map<Long, LearningMaterial> codeLearningMaterial = new HashMap<Long, LearningMaterial>();
 			Map<String, Long> videoIdCode = new HashMap<String, Long>();
@@ -104,6 +108,8 @@ public class RecommenderController {
 				response.put("videos", youtubeItems);
 				response.put("message", "");
 				response.put("success", false);
+
+				return response;
 			}
 		}
 
@@ -113,26 +119,19 @@ public class RecommenderController {
 		return response;
 	}
 
-	private List<String> getYoutubeVideoIds(List<LearningMaterial> youtubeItems) {
-		List<String> youtubeVideoIds = new ArrayList<String>();
-
-		for (LearningMaterial youtubeItem : youtubeItems) {
-			youtubeVideoIds.add(youtubeItem.getVideoId());
-		}
-
-		return youtubeVideoIds;
-	}
-
 	private void getDataModel(String currentUserId, List<LearningMaterial> youtubeItems,
 			Map<Long, LearningMaterial> codeLearningMaterial, Map<String, Long> videoIdCode,
 			FastByIDMap<PreferenceArray> userData) {
 
 		Set<String> userIds = new HashSet<String>();
 
-		List<Rating> ratedByMe = ratingRepository.findByUserId(currentUserId);
+		List<Rating> ratedByMe = repository.findByUserId(currentUserId);
+
+		getInCommonRatedItemsUserIds(ratedByMe, userIds);
 
 		getRatedYoutubeItemsUserIds(youtubeItems, currentUserId, userIds);
-		getInCommonRatedItemsUserIds(ratedByMe, userIds);
+
+		threadAwaiting(threads);
 
 		List<Preference> preferences = new ArrayList<Preference>();
 
@@ -152,7 +151,7 @@ public class RecommenderController {
 		for (String userId : userIds) {
 			preferences = new ArrayList<Preference>();
 
-			List<Rating> ratedItems = ratingRepository.findByUserId(userId);
+			List<Rating> ratedItems = repository.findByUserId(userId);
 
 			for (Rating ratedItem : ratedItems) {
 				String videoId = ratedItem.getLearningMaterial().getVideoId();
@@ -179,12 +178,12 @@ public class RecommenderController {
 
 	private void getInCommonRatedItemsUserIds(List<Rating> ratedByMe, Set<String> userIds) {
 		for (Rating rating : ratedByMe) {
-			List<Rating> inCommonRatings = ratingRepository.findByVideoIdAndNotUserId(rating.getLearningMaterial(),
-					rating.getUserId());
+			InCommonRatedItemUserId runnable = new InCommonRatedItemUserId(rating, userIds, repository);
 
-			for (Rating inCommonRating : inCommonRatings) {
-				userIds.add(inCommonRating.getUserId());
-			}
+			Thread thread = new Thread(runnable);
+			thread.start();
+
+			threads.add(thread);
 		}
 	}
 
@@ -192,11 +191,13 @@ public class RecommenderController {
 			Set<String> userIds) {
 
 		for (LearningMaterial youtubeItem : youtubeItems) {
-			List<Rating> youtubeItemRatings = ratingRepository.findByVideoIdAndNotUserId(youtubeItem, currentUserId);
+			RatedYoutubeItemUserId runnable = new RatedYoutubeItemUserId(youtubeItem, currentUserId, userIds,
+					repository);
 
-			for (Rating itemRating : youtubeItemRatings) {
-				userIds.add(itemRating.getUserId());
-			}
+			Thread thread = new Thread(runnable);
+			thread.start();
+
+			threads.add(thread);
 		}
 	}
 
@@ -212,5 +213,15 @@ public class RecommenderController {
 		List<RecommendedItem> recommendations = recommender.recommend(0, 20);
 
 		return recommendations;
+	}
+
+	private void threadAwaiting(List<Thread> threads) {
+		for (Thread thread : threads) {
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				System.out.println("Error on waiting for Thread" + e.getMessage());
+			}
+		}
 	}
 }
