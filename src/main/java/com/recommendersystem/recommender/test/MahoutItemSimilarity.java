@@ -19,58 +19,45 @@ import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.cf.taste.recommender.UserBasedRecommender;
 import org.apache.mahout.cf.taste.similarity.UserSimilarity;
 
-public class MahoutTest {
+public class MahoutItemSimilarity {
 	public static void main(String[] args) {
 		try {
 			FastByIDMap<PreferenceArray> userData = new FastByIDMap<PreferenceArray>();
 
 			List<Preference> pref1 = new ArrayList<Preference>();
 
-			pref1.add(new GenericPreference(1, 10, -1.0f));
-			pref1.add(new GenericPreference(1, 11, -1.0f));
-			pref1.add(new GenericPreference(1, 12, 1.0f));
-			pref1.add(new GenericPreference(1, 13, -1.0f));
-			pref1.add(new GenericPreference(1, 14, -1.0f));
-			pref1.add(new GenericPreference(1, 15, -1.0f));
-			pref1.add(new GenericPreference(1, 16, 1.0f));
-			pref1.add(new GenericPreference(1, 17, 1.0f));
-			pref1.add(new GenericPreference(1, 18, 1.0f));
+			pref1.add(new GenericPreference(0, 1, 1.0f));
+			pref1.add(new GenericPreference(0, 2, -1.0f));
+			// pref1.add(new GenericPreference(0, 3, 1.0f));
 
 			List<Preference> pref2 = new ArrayList<Preference>();
 
-			pref2.add(new GenericPreference(2, 10, 1.0f));
-			pref2.add(new GenericPreference(2, 15, -1.0f));
-			pref2.add(new GenericPreference(2, 16, 1.0f));
-			pref2.add(new GenericPreference(2, 17, -1.0f));
-			pref2.add(new GenericPreference(2, 18, 1.0f));
+			pref2.add(new GenericPreference(1, 1, 1.0f));
+			pref2.add(new GenericPreference(1, 2, 1.0f));
+			pref2.add(new GenericPreference(1, 3, -1.0f));
+			pref2.add(new GenericPreference(1, 4, -1.0f));
+			pref2.add(new GenericPreference(1, 5, 1.0f));
 
 			List<Preference> pref3 = new ArrayList<Preference>();
 
-			pref3.add(new GenericPreference(3, 11, 1.0f));
-			pref3.add(new GenericPreference(3, 12, -1.0f));
-			pref3.add(new GenericPreference(3, 13, 1.0f));
-			pref3.add(new GenericPreference(3, 14, 1.0f));
-			pref3.add(new GenericPreference(3, 15, -1.0f));
-			pref3.add(new GenericPreference(3, 16, -1.0f));
-			pref3.add(new GenericPreference(3, 17, -1.0f));
-			pref3.add(new GenericPreference(3, 18, 1.0f));
+			pref3.add(new GenericPreference(2, 1, 1.0f));
+			pref3.add(new GenericPreference(2, 2, -1.0f));
+			pref3.add(new GenericPreference(2, 3, -1.0f));
+			pref3.add(new GenericPreference(2, 4, 1.0f));
+			pref3.add(new GenericPreference(2, 5, 1.0f));
 
 			List<Preference> pref4 = new ArrayList<Preference>();
 
-			pref4.add(new GenericPreference(4, 10, 1.0f));
-			pref4.add(new GenericPreference(4, 11, -1.0f));
-			pref4.add(new GenericPreference(4, 12, -1.0f));
-			pref4.add(new GenericPreference(4, 13, 1.0f));
-			pref4.add(new GenericPreference(4, 14, 1.0f));
-			pref4.add(new GenericPreference(4, 15, -1.0f));
-			pref4.add(new GenericPreference(4, 16, -1.0f));
-			pref4.add(new GenericPreference(4, 17, -1.0f));
-			pref4.add(new GenericPreference(4, 18, 1.0f));
+			pref4.add(new GenericPreference(3, 1, 1.0f));
+			pref4.add(new GenericPreference(3, 2, -1.0f));
+			pref4.add(new GenericPreference(3, 3, 1.0f));
+			pref4.add(new GenericPreference(3, 4, -1.0f));
+			pref4.add(new GenericPreference(3, 5, -1.0f));
 
-			userData.put(1, new GenericUserPreferenceArray(pref1));
-			userData.put(2, new GenericUserPreferenceArray(pref2));
-			userData.put(3, new GenericUserPreferenceArray(pref3));
-			userData.put(4, new GenericUserPreferenceArray(pref4));
+			userData.put(0, new GenericUserPreferenceArray(pref1));
+			userData.put(1, new GenericUserPreferenceArray(pref2));
+			userData.put(2, new GenericUserPreferenceArray(pref3));
+			userData.put(3, new GenericUserPreferenceArray(pref4));
 
 			DataModel model = new GenericDataModel(userData);
 
@@ -80,7 +67,7 @@ public class MahoutTest {
 
 			UserBasedRecommender recommender = new GenericUserBasedRecommender(model, neighborhood, similarity);
 
-			List<RecommendedItem> recommendations = recommender.recommend(2, 20);
+			List<RecommendedItem> recommendations = recommender.recommend(0, 20);
 			for (RecommendedItem recommendation : recommendations) {
 				System.out.println(recommendation);
 			}

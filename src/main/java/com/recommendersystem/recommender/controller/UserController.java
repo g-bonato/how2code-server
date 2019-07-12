@@ -31,6 +31,7 @@ public class UserController {
 
 	@RequestMapping(value = "/", method = RequestMethod.POST)
 	public Map<String, Object> createUser(@Valid @RequestBody User user, HttpServletResponse httpResponse) {
+
 		Map<String, Object> response = new HashMap<>();
 
 		if (StringUtil.isBlank(user.getEmail()) || StringUtil.isBlank(user.getPassword())) {
@@ -196,7 +197,11 @@ public class UserController {
 
 	private Cookie getCookie(String name, String value) {
 		Cookie c = new Cookie(name, value);
+		c.setDomain("localhost");
+		c.setHttpOnly(true);
+		c.setMaxAge(1000);
 		c.setPath("/");
+		c.setSecure(false);
 		return c;
 	}
 }

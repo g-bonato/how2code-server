@@ -35,6 +35,18 @@ public class RatingController {
 		return response;
 	}
 
+	@RequestMapping(value = "/byId/", method = RequestMethod.GET)
+	public Map<String, Object> getRatingsByUserIdAndVideoId(@RequestBody Rating rating) {
+		Map<String, Object> response = new HashMap<>();
+
+		List<Rating> ratingsList = repository.findByUserIdAndVideoId(rating.getUserId(), rating.getLearningMaterial());
+
+		response.put("ratings", ratingsList);
+		response.put("success", true);
+
+		return response;
+	}
+
 	@RequestMapping(value = "/", method = RequestMethod.POST)
 	public Map<String, Object> rating(@Valid @RequestBody Rating rating) {
 		Map<String, Object> response = new HashMap<>();
@@ -43,8 +55,7 @@ public class RatingController {
 
 		ratingAux.set_id(ObjectId.get());
 
-		List<Rating> ratingsList = repository
-				.findByUserIdAndVideoId(rating.getUserId(), rating.getLearningMaterial().getVideoId());
+		List<Rating> ratingsList = repository.findByUserIdAndVideoId(rating.getUserId(), rating.getLearningMaterial());
 
 		if (ratingsList != null && !ratingsList.isEmpty()) {
 			ratingAux = ratingsList.get(0);

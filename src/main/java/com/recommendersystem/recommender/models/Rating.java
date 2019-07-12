@@ -64,4 +64,9 @@ public class Rating {
 	public void setUserId(String userId) {
 		this.userId = userId;
 	}
+
+	@Override
+	public String toString() {
+		return userId.concat(" - ").concat(learningMaterial.getVideoId()).concat(" - ").concat(rating.toString());
+	}
 }
