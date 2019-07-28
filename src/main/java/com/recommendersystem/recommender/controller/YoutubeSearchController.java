@@ -35,7 +35,7 @@ public class YoutubeSearchController {
 				search.setPageToken(pageToken);
 			}
 
-			search.setMaxResults((long) 10);
+			search.setMaxResults((long) 50);
 			search.setType("video");
 			search.setOrder("rating");
 			search.setPart("snippet");

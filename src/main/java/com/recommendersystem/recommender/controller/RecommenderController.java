@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.FastByIDMap;
 import org.apache.mahout.cf.taste.impl.model.GenericDataModel;
@@ -25,11 +23,11 @@ import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.cf.taste.recommender.UserBasedRecommender;
 import org.apache.mahout.cf.taste.similarity.UserSimilarity;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.recommendersystem.recommender.models.LearningMaterial;
@@ -46,17 +44,18 @@ public class RecommenderController {
 	private RatingRepository repository;
 	private List<Thread> threads = new ArrayList<Thread>();
 
+	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/{query}", method = RequestMethod.GET)
 	public Map<String, Object> getVideoRecommendation(@PathVariable("query") String query,
-			@CookieValue(value = "session", defaultValue = "") String sessionId,
-			@CookieValue(value = "userId", defaultValue = "") String userId, HttpServletRequest httpRequest) {
+			@RequestParam(value = "UserID", defaultValue = "") String userId,
+			@RequestParam(value = "SessionID", defaultValue = "") String sessionId) {
 
 		Map<String, Object> response = new HashMap<>();
 
 		String pageToken = null;
 		List<LearningMaterial> learningMaterials = new ArrayList<LearningMaterial>();
 
-		while (learningMaterials.size() < 10) {
+		while (learningMaterials.size() < 50) {
 			Map<String, Object> youtubeResponse = YoutubeSearchController.getVideos(query, pageToken);
 
 			pageToken = (String) youtubeResponse.get("nextPageToken");

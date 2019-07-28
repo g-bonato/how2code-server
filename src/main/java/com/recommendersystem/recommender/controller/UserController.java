@@ -5,17 +5,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.recommendersystem.recommender.models.User;
@@ -31,7 +30,6 @@ public class UserController {
 
 	@RequestMapping(value = "/", method = RequestMethod.POST)
 	public Map<String, Object> createUser(@Valid @RequestBody User user, HttpServletResponse httpResponse) {
-
 		Map<String, Object> response = new HashMap<>();
 
 		if (StringUtil.isBlank(user.getEmail()) || StringUtil.isBlank(user.getPassword())) {
@@ -50,11 +48,8 @@ public class UserController {
 
 		user.set_id(ObjectId.get());
 
-		user.setSession(SessionController.createSession());
+		user.setSession(SessionController.createSession(user));
 		repository.save(user);
-
-		httpResponse.addCookie(getCookie("session", user.getSession().getSessionId()));
-		httpResponse.addCookie(getCookie("userId", user.getId()));
 
 		response.put("user", user);
 		response.put("success", true);
@@ -62,11 +57,20 @@ public class UserController {
 		return response;
 	}
 
-	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-	public Map<String, Object> deleteUser(@PathVariable String id) {
-		Optional<User> userAux = repository.findById(id);
+	@RequestMapping(value = "/", method = RequestMethod.DELETE)
+	public Map<String, Object> deleteUser(@RequestParam(value = "UserID", defaultValue = "") String userId,
+			@RequestParam(value = "SessionID", defaultValue = "") String sessionId) {
 
 		Map<String, Object> response = new HashMap<>();
+
+		if (!SessionController.isValidSession(sessionId, userId)) {
+			response.put("message", "Você deve estar logado!");
+			response.put("success", false);
+
+			return response;
+		}
+
+		Optional<User> userAux = repository.findById(userId);
 
 		if (!userAux.isPresent()) {
 			response.put("message", "Usuário não encontrado!");
@@ -83,20 +87,19 @@ public class UserController {
 	}
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)
-	public Map<String, Object> getAllUsers() {
-		Map<String, Object> response = new HashMap<>();
-
-		response.put("users", repository.findAll());
-		response.put("success", true);
-
-		return response;
-	}
-
-	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
-	public Map<String, Object> getUserById(@PathVariable("id") String id) {
-		Optional<User> userAux = repository.findById(id);
+	public Map<String, Object> getUserById(@RequestParam(value = "UserID", defaultValue = "") String userId,
+			@RequestParam(value = "SessionID", defaultValue = "") String sessionId) {
 
 		Map<String, Object> response = new HashMap<>();
+
+		if (!SessionController.isValidSession(sessionId, userId)) {
+			response.put("message", "Você deve estar logado!");
+			response.put("success", false);
+
+			return response;
+		}
+
+		Optional<User> userAux = repository.findById(userId);
 
 		if (!userAux.isPresent()) {
 			response.put("message", "Usuário não encontrado!");
@@ -111,11 +114,21 @@ public class UserController {
 		return response;
 	}
 
-	@RequestMapping(value = "/{id}", method = RequestMethod.PUT)
-	public Map<String, Object> modifyUserById(@PathVariable("id") String id, @Valid @RequestBody User user) {
-		Optional<User> userAux = repository.findById(id);
+	@RequestMapping(value = "/", method = RequestMethod.PUT)
+	public Map<String, Object> modifyUserById(@Valid @RequestBody User user,
+			@RequestParam(value = "UserID", defaultValue = "") String userId,
+			@RequestParam(value = "SessionID", defaultValue = "") String sessionId) {
 
 		Map<String, Object> response = new HashMap<>();
+
+		if (!SessionController.isValidSession(sessionId, userId)) {
+			response.put("message", "Você deve estar logado!");
+			response.put("success", false);
+
+			return response;
+		}
+
+		Optional<User> userAux = repository.findById(userId);
 
 		if (!userAux.isPresent()) {
 			response.put("message", "Usuário não encontrado!");
@@ -159,23 +172,53 @@ public class UserController {
 		}
 
 		User user = users.get(0);
-		user.setSession(SessionController.createSession());
+		user.setSession(SessionController.createSession(user));
 		repository.save(user);
 
 		response.put("user", user);
 		response.put("success", true);
 
-		httpResponse.addCookie(getCookie("session", user.getSession().getSessionId()));
-		httpResponse.addCookie(getCookie("userId", user.getId()));
+		return response;
+	}
+
+	@RequestMapping(value = "/autoLogin", method = RequestMethod.POST)
+	public Map<String, Object> userAutoLogin(@RequestParam(value = "UserID", defaultValue = "") String userId,
+			@RequestParam(value = "SessionID", defaultValue = "") String sessionId) {
+
+		Map<String, Object> response = new HashMap<>();
+
+		if (!SessionController.isValidSession(sessionId, userId)) {
+			response.put("message", "Erro ao realizar o auto login");
+			response.put("success", false);
+		}
+
+		Optional<User> userAux = repository.findById(userId);
+
+		if (!userAux.isPresent()) {
+			response.put("message", "Usuário não encontrado!");
+			response.put("success", false);
+
+			return response;
+		}
+
+		response.put("user", userAux.get());
+		response.put("success", true);
 
 		return response;
 	}
 
 	@RequestMapping(value = "/logout", method = RequestMethod.POST)
-	public Map<String, Object> userLogout(@RequestBody User userForLogout) {
-		Optional<User> userAux = repository.findById(userForLogout.getId());
+	public Map<String, Object> userLogout(@RequestParam(value = "UserID", defaultValue = "") String userId,
+			@RequestParam(value = "SessionID", defaultValue = "") String sessionId) {
 
 		Map<String, Object> response = new HashMap<>();
+
+		if (!SessionController.isValidSession(sessionId, userId)) {
+			response.put("message", "Erro ao realizar o auto login");
+			response.put("success", false);
+		}
+
+		Optional<User> userAux = repository.findById(userId);
 
 		if (!userAux.isPresent()) {
 			response.put("message", "Usuário não encontrado!");
@@ -186,22 +229,12 @@ public class UserController {
 
 		User user = userAux.get();
 
-		user.getSession().setSessionId("");
+		user.setSession(SessionController.getInvalidSession());
 		repository.save(user);
 
 		response.put("user", user);
 		response.put("success", true);
 
 		return response;
-	}
-
-	private Cookie getCookie(String name, String value) {
-		Cookie c = new Cookie(name, value);
-		c.setDomain("localhost");
-		c.setHttpOnly(true);
-		c.setMaxAge(1000);
-		c.setPath("/");
-		c.setSecure(false);
-		return c;
 	}
 }
