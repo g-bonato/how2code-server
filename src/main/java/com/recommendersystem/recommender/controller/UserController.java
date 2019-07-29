@@ -12,6 +12,7 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,7 +22,7 @@ import com.recommendersystem.recommender.models.User;
 import com.recommendersystem.recommender.repository.UserRepository;
 import com.recommendersystem.recommender.utils.StringUtil;
 
-@CrossOrigin
+@CrossOrigin(allowCredentials = "true")
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -182,23 +183,27 @@ public class UserController {
 	}
 
 	@RequestMapping(value = "/autoLogin", method = RequestMethod.POST)
-	public Map<String, Object> userAutoLogin(@RequestParam(value = "UserID", defaultValue = "") String userId,
-			@RequestParam(value = "SessionID", defaultValue = "") String sessionId) {
+	public Map<String, Object> userAutoLogin(
+			@RequestHeader(name = "Authorization", required = true, defaultValue = "") String authorization) {
+
+		System.out.println(authorization);
 
 		Map<String, Object> response = new HashMap<>();
 
-		if (!SessionController.isValidSession(sessionId, userId)) {
-			response.put("message", "Erro ao realizar o auto login");
-			response.put("success", false);
-		}
-
-		Optional<User> userAux = repository.findById(userId);
+		Optional<User> userAux = repository.findBySessionId(authorization);
 
 		if (!userAux.isPresent()) {
-			response.put("message", "Usuário não encontrado!");
+			response.put("message", "Sessão inválida!");
 			response.put("success", false);
 
 			return response;
+		}
+
+		User user = userAux.get();
+
+		if (!SessionController.isValidSession(authorization, user)) {
+			response.put("message", "Sessão inválida!");
+			response.put("success", false);
 		}
 
 		response.put("user", userAux.get());

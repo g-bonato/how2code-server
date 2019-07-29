@@ -2,19 +2,12 @@ package com.recommendersystem.recommender.controller;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.hash.Hashing;
 import com.recommendersystem.recommender.models.Session;
 import com.recommendersystem.recommender.models.User;
-import com.recommendersystem.recommender.repository.UserRepository;
 
 public class SessionController {
-	@Autowired
-	private static UserRepository repository;
-
 	public static Session createSession(User user) {
 		Session session = new Session();
 
@@ -32,24 +25,19 @@ public class SessionController {
 		return session;
 	}
 
-	public static boolean isValidSession(String sessionId, String userId) {
-		Optional<User> optionalUser = repository.findById(userId);
-
-		if (!optionalUser.isPresent()) {
-			return false;
-		}
-
-		User user = optionalUser.get();
-
+	public static boolean isValidSession(String sessionId, User user) {
 		if (user == null || user.getSession() == null || user.getSession().getSessionId() == null) {
+			System.out.println("Primeiro if");
 			return false;
 		}
 
 		if (!sessionId.equals(user.getSession().getSessionId())) {
+			System.out.println("Segundo if");
 			return false;
 		}
 
 		if (Calendar.getInstance().getTimeInMillis() > user.getSession().getExpirationDate().getTimeInMillis()) {
+			System.out.println("Terceiro if");
 			return false;
 		}
 
