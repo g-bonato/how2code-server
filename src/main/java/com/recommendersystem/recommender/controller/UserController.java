@@ -1,7 +1,6 @@
 package com.recommendersystem.recommender.controller;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -22,7 +21,7 @@ import com.recommendersystem.recommender.models.User;
 import com.recommendersystem.recommender.repository.UserRepository;
 import com.recommendersystem.recommender.utils.StringUtil;
 
-@CrossOrigin(allowCredentials = "true")
+@CrossOrigin
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -64,13 +63,6 @@ public class UserController {
 
 		Map<String, Object> response = new HashMap<>();
 
-		if (!SessionController.isValidSession(sessionId, userId)) {
-			response.put("message", "Você deve estar logado!");
-			response.put("success", false);
-
-			return response;
-		}
-
 		Optional<User> userAux = repository.findById(userId);
 
 		if (!userAux.isPresent()) {
@@ -80,7 +72,16 @@ public class UserController {
 			return response;
 		}
 
-		repository.delete(userAux.get());
+		User user = userAux.get();
+
+		if (!SessionController.isValidSession(sessionId, user)) {
+			response.put("message", "Você deve estar logado!");
+			response.put("success", false);
+
+			return response;
+		}
+
+		repository.delete(user);
 
 		response.put("success", true);
 
@@ -88,28 +89,28 @@ public class UserController {
 	}
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)
-	public Map<String, Object> getUserById(@RequestParam(value = "UserID", defaultValue = "") String userId,
-			@RequestParam(value = "SessionID", defaultValue = "") String sessionId) {
+	public Map<String, Object> getUserById(
+			@RequestHeader(name = "Authorization", required = true, defaultValue = "") String authorization) {
 
 		Map<String, Object> response = new HashMap<>();
 
-		if (!SessionController.isValidSession(sessionId, userId)) {
+		Optional<User> userAux = repository.findBySessionId(authorization);
+
+		if (!userAux.isPresent()) {
 			response.put("message", "Você deve estar logado!");
 			response.put("success", false);
 
 			return response;
 		}
 
-		Optional<User> userAux = repository.findById(userId);
+		User user = userAux.get();
 
-		if (!userAux.isPresent()) {
-			response.put("message", "Usuário não encontrado!");
+		if (!SessionController.isValidSession(authorization, user)) {
+			response.put("message", "Você deve estar logado!");
 			response.put("success", false);
-
-			return response;
 		}
 
-		response.put("user", userAux.get());
+		response.put("user", user);
 		response.put("success", true);
 
 		return response;
@@ -117,19 +118,11 @@ public class UserController {
 
 	@RequestMapping(value = "/", method = RequestMethod.PUT)
 	public Map<String, Object> modifyUserById(@Valid @RequestBody User user,
-			@RequestParam(value = "UserID", defaultValue = "") String userId,
-			@RequestParam(value = "SessionID", defaultValue = "") String sessionId) {
+			@RequestHeader(name = "Authorization", required = true, defaultValue = "") String authorization) {
 
 		Map<String, Object> response = new HashMap<>();
 
-		if (!SessionController.isValidSession(sessionId, userId)) {
-			response.put("message", "Você deve estar logado!");
-			response.put("success", false);
-
-			return response;
-		}
-
-		Optional<User> userAux = repository.findById(userId);
+		Optional<User> userAux = repository.findBySessionId(authorization);
 
 		if (!userAux.isPresent()) {
 			response.put("message", "Usuário não encontrado!");
@@ -139,6 +132,13 @@ public class UserController {
 		}
 
 		User userOld = userAux.get();
+
+		if (!SessionController.isValidSession(authorization, userOld)) {
+			response.put("message", "Você deve estar logado!");
+			response.put("success", false);
+
+			return response;
+		}
 
 		userOld.setEmail(user.getEmail());
 		userOld.setFullname(user.getFullname());
@@ -160,19 +160,21 @@ public class UserController {
 	}
 
 	@RequestMapping(value = "/login", method = RequestMethod.POST)
-	public Map<String, Object> userLogin(@RequestBody User userForLogin, HttpServletResponse httpResponse) {
+	public Map<String, Object> userLogin(@RequestBody User userForLogin,
+			@RequestHeader(name = "Authorization", required = false, defaultValue = "") String authorization) {
+
 		Map<String, Object> response = new HashMap<>();
 
-		List<User> users = repository.findByEmailAndPassword(userForLogin.getEmail(), userForLogin.getPassword());
+		Optional<User> userAux = repository.findByEmailAndPassword(userForLogin.getEmail(), userForLogin.getPassword());
 
-		if (users.isEmpty()) {
+		if (!userAux.isPresent()) {
 			response.put("success", false);
 			response.put("message", "Email ou senha incorretos!");
 
 			return response;
 		}
 
-		User user = users.get(0);
+		User user = userAux.get();
 		user.setSession(SessionController.createSession(user));
 		repository.save(user);
 
@@ -185,8 +187,6 @@ public class UserController {
 	@RequestMapping(value = "/autoLogin", method = RequestMethod.POST)
 	public Map<String, Object> userAutoLogin(
 			@RequestHeader(name = "Authorization", required = true, defaultValue = "") String authorization) {
-
-		System.out.println(authorization);
 
 		Map<String, Object> response = new HashMap<>();
 
@@ -206,33 +206,36 @@ public class UserController {
 			response.put("success", false);
 		}
 
-		response.put("user", userAux.get());
+		user.setSession(SessionController.createSession(user));
+		repository.save(user);
+
+		response.put("user", user);
 		response.put("success", true);
 
 		return response;
 	}
 
 	@RequestMapping(value = "/logout", method = RequestMethod.POST)
-	public Map<String, Object> userLogout(@RequestParam(value = "UserID", defaultValue = "") String userId,
-			@RequestParam(value = "SessionID", defaultValue = "") String sessionId) {
+	public Map<String, Object> userLogout(
+			@RequestHeader(name = "Authorization", required = true, defaultValue = "") String authorization) {
 
 		Map<String, Object> response = new HashMap<>();
 
-		if (!SessionController.isValidSession(sessionId, userId)) {
-			response.put("message", "Erro ao realizar o auto login");
-			response.put("success", false);
-		}
-
-		Optional<User> userAux = repository.findById(userId);
+		Optional<User> userAux = repository.findBySessionId(authorization);
 
 		if (!userAux.isPresent()) {
-			response.put("message", "Usuário não encontrado!");
+			response.put("message", "Você deve estar logado!");
 			response.put("success", "false");
 
 			return response;
 		}
 
 		User user = userAux.get();
+
+		if (!SessionController.isValidSession(authorization, user)) {
+			response.put("message", "Você deve estar logado!");
+			response.put("success", false);
+		}
 
 		user.setSession(SessionController.getInvalidSession());
 		repository.save(user);

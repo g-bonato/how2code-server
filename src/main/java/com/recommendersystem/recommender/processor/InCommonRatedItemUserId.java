@@ -20,7 +20,7 @@ public class InCommonRatedItemUserId implements Runnable {
 
 	@Override
 	public void run() {
-		List<Rating> inCommonRatings = repository.findByVideoIdAndNotUserId(rating.getLearningMaterial(),
+		List<Rating> inCommonRatings = repository.findByVideoIdAndNotUserId(rating.getLearningMaterial().getVideoId(),
 				rating.getUserId());
 
 		for (Rating inCommonRating : inCommonRatings) {

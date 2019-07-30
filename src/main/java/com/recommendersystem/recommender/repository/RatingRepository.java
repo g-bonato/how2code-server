@@ -15,12 +15,12 @@ public interface RatingRepository extends MongoRepository<Rating, String> {
 
 	public List<Rating> findByUserId(String userId);
 
-	@Query("{ 'userId' : ?0, 'learningMaterial' : ?1 }")
-	public List<Rating> findByUserIdAndVideoId(String userId, LearningMaterial learningMaterial);
+	@Query("{ 'userId' : ?0, 'learningMaterial.videoId' : ?1 }")
+	public List<Rating> findByUserIdAndVideoId(String userId, String videoId);
 
 	@Query("{ 'learningMaterial' : ?0 }")
 	public List<Rating> findByVideoId(LearningMaterial learningMaterial);
 
-	@Query("{ 'userId' : { $not : { $eq : ?1 } }, 'learningMaterial' : ?0 }")
-	public List<Rating> findByVideoIdAndNotUserId(LearningMaterial learningMaterial, String userId);
+	@Query("{ 'userId' : { $not : { $eq : ?1 } }, 'learningMaterial.videoId' : ?0 }")
+	public List<Rating> findByVideoIdAndNotUserId(String videoId, String userId);
 }

@@ -27,17 +27,14 @@ public class SessionController {
 
 	public static boolean isValidSession(String sessionId, User user) {
 		if (user == null || user.getSession() == null || user.getSession().getSessionId() == null) {
-			System.out.println("Primeiro if");
 			return false;
 		}
 
 		if (!sessionId.equals(user.getSession().getSessionId())) {
-			System.out.println("Segundo if");
 			return false;
 		}
 
 		if (Calendar.getInstance().getTimeInMillis() > user.getSession().getExpirationDate().getTimeInMillis()) {
-			System.out.println("Terceiro if");
 			return false;
 		}
 

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.mahout.cf.taste.common.TasteException;
@@ -25,16 +26,18 @@ import org.apache.mahout.cf.taste.similarity.UserSimilarity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.recommendersystem.recommender.models.LearningMaterial;
 import com.recommendersystem.recommender.models.Rating;
+import com.recommendersystem.recommender.models.User;
 import com.recommendersystem.recommender.processor.InCommonRatedItemUserId;
 import com.recommendersystem.recommender.processor.RatedYoutubeItemUserId;
 import com.recommendersystem.recommender.repository.RatingRepository;
+import com.recommendersystem.recommender.repository.UserRepository;
 
 @CrossOrigin
 @RestController
@@ -42,13 +45,16 @@ import com.recommendersystem.recommender.repository.RatingRepository;
 public class RecommenderController {
 	@Autowired
 	private RatingRepository repository;
+
+	@Autowired
+	private UserRepository userRepository;
+
 	private List<Thread> threads = new ArrayList<Thread>();
 
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/{query}", method = RequestMethod.GET)
 	public Map<String, Object> getVideoRecommendation(@PathVariable("query") String query,
-			@RequestParam(value = "UserID", defaultValue = "") String userId,
-			@RequestParam(value = "SessionID", defaultValue = "") String sessionId) {
+			@RequestHeader(name = "Authorization", required = true, defaultValue = "") String authorization) {
 
 		Map<String, Object> response = new HashMap<>();
 
@@ -60,12 +66,16 @@ public class RecommenderController {
 
 			pageToken = (String) youtubeResponse.get("nextPageToken");
 
-			if (!SessionController.isValidSession(sessionId, userId)) {
+			Optional<User> userAux = userRepository.findBySessionId(authorization);
+
+			if (!userAux.isPresent() || !SessionController.isValidSession(authorization, userAux.get())) {
 				response.put("videos", youtubeResponse.get("learningMaterials"));
 				response.put("success", true);
 
 				return response;
 			}
+
+			String userId = userAux.get().getId();
 
 			List<LearningMaterial> youtubeItems = new ArrayList<LearningMaterial>();
 

@@ -11,9 +11,9 @@ import com.recommendersystem.recommender.models.User;
 public interface UserRepository extends MongoRepository<User, String> {
 	public List<User> findByEmail(String email);
 
-	public List<User> findByEmailAndPassword(String email, String password);
+	public Optional<User> findByEmailAndPassword(String email, String password);
 
-	@Query("{ 'session' : { 'sessionId' : ?0 } }")
+	@Query("{ 'session.sessionId' : ?0 }")
 	public Optional<User> findBySessionId(String sessionId);
 
 	@Override

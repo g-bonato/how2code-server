@@ -26,7 +26,7 @@ public class RatedYoutubeItemUserId implements Runnable {
 
 	@Override
 	public void run() {
-		List<Rating> youtubeItemRatings = repository.findByVideoIdAndNotUserId(youtubeItem, currentUserId);
+		List<Rating> youtubeItemRatings = repository.findByVideoIdAndNotUserId(youtubeItem.getVideoId(), currentUserId);
 
 		for (Rating itemRating : youtubeItemRatings) {
 			synchronized (userIds) {
