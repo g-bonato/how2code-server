@@ -99,4 +99,15 @@ public class User {
 	public void setId(String id) {
 		this.id = id;
 	}
+
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("[");
+		sb.append("email: ").append(this.email);
+		sb.append("; profileId: ").append(this.id);
+		sb.append("]");
+
+		return email;
+	}
 }

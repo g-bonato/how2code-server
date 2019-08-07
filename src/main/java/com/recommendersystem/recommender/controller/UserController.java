@@ -7,6 +7,7 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import org.apache.log4j.Logger;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -25,6 +26,8 @@ import com.recommendersystem.recommender.utils.StringUtil;
 @RestController
 @RequestMapping("/user")
 public class UserController {
+	private static final Logger logger = Logger.getLogger(UserController.class);
+
 	@Autowired
 	private UserRepository repository;
 
@@ -40,6 +43,8 @@ public class UserController {
 		}
 
 		if (!repository.findByEmail(user.getEmail()).isEmpty()) {
+			logger.info("No user found with email: " + user.getEmail());
+
 			response.put("success", false);
 			response.put("message", "Email já está cadastrado");
 
@@ -97,6 +102,8 @@ public class UserController {
 		Optional<User> userAux = repository.findBySessionId(authorization);
 
 		if (!userAux.isPresent()) {
+			logger.info("Failed on getting user for authorization: " + authorization);
+
 			response.put("message", "Você deve estar logado!");
 			response.put("success", false);
 
@@ -106,6 +113,8 @@ public class UserController {
 		User user = userAux.get();
 
 		if (!SessionController.isValidSession(authorization, user)) {
+			logger.info("Invalid session for user " + user);
+
 			response.put("message", "Você deve estar logado!");
 			response.put("success", false);
 		}
