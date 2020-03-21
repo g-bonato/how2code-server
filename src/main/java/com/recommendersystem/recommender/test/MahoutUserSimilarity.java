@@ -26,8 +26,9 @@ public class MahoutUserSimilarity {
 
 			List<Preference> pref1 = new ArrayList<Preference>();
 
-			pref1.add(new GenericPreference(0, 1, 1.0f));
+			pref1.add(new GenericPreference(0, 1, -1.0f));
 			pref1.add(new GenericPreference(0, 2, -1.0f));
+			pref1.add(new GenericPreference(0, 3, 1.0f));
 
 			List<Preference> pref2 = new ArrayList<Preference>();
 
@@ -41,14 +42,14 @@ public class MahoutUserSimilarity {
 
 			pref3.add(new GenericPreference(2, 1, 1.0f));
 			pref3.add(new GenericPreference(2, 2, -1.0f));
-			pref3.add(new GenericPreference(2, 3, 1.0f));
+			pref3.add(new GenericPreference(2, 3, 0.0f));
 			pref3.add(new GenericPreference(2, 4, 1.0f));
-			pref3.add(new GenericPreference(2, 5, 1.0f));
+			pref3.add(new GenericPreference(2, 5, -1.0f));
 
 			List<Preference> pref4 = new ArrayList<Preference>();
 
-			pref4.add(new GenericPreference(3, 1, 1.0f));
-			pref4.add(new GenericPreference(3, 2, -1.0f));
+			pref4.add(new GenericPreference(3, 1, -1.0f));
+			pref4.add(new GenericPreference(3, 2, 1.0f));
 			pref4.add(new GenericPreference(3, 3, 1.0f));
 			pref4.add(new GenericPreference(3, 4, -1.0f));
 			pref4.add(new GenericPreference(3, 5, -1.0f));
@@ -58,6 +59,8 @@ public class MahoutUserSimilarity {
 			userData.put(2, new GenericUserPreferenceArray(pref3));
 			userData.put(3, new GenericUserPreferenceArray(pref4));
 
+			System.out.println(userData);
+			
 			DataModel model = new GenericDataModel(userData);
 
 			UserSimilarity similarity = new PearsonCorrelationSimilarity(model);

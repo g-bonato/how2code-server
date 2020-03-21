@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
@@ -55,6 +56,8 @@ public class UserController {
 
 		user.setSession(SessionController.createSession(user));
 		repository.save(user);
+
+		httpResponse.addCookie(new Cookie("SESSIONID", user.getSession().getSessionId()));
 
 		response.put("user", user);
 		response.put("success", true);

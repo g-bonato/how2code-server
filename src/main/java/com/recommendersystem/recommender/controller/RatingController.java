@@ -10,6 +10,8 @@ import javax.validation.Valid;
 
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -22,7 +24,7 @@ import com.recommendersystem.recommender.models.User;
 import com.recommendersystem.recommender.repository.RatingRepository;
 import com.recommendersystem.recommender.repository.UserRepository;
 
-@CrossOrigin
+@CrossOrigin(origins = { "http://localhost:8100", "https://how2code.web.app" })
 @RestController
 @RequestMapping("/rating")
 public class RatingController {
@@ -70,4 +72,5 @@ public class RatingController {
 
 		return response;
 	}
+
 }

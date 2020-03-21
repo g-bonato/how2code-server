@@ -8,6 +8,7 @@ import org.apache.mahout.cf.taste.impl.common.FastByIDMap;
 import org.apache.mahout.cf.taste.impl.model.GenericDataModel;
 import org.apache.mahout.cf.taste.impl.model.GenericPreference;
 import org.apache.mahout.cf.taste.impl.model.GenericUserPreferenceArray;
+import org.apache.mahout.cf.taste.impl.neighborhood.NearestNUserNeighborhood;
 import org.apache.mahout.cf.taste.impl.neighborhood.ThresholdUserNeighborhood;
 import org.apache.mahout.cf.taste.impl.recommender.GenericUserBasedRecommender;
 import org.apache.mahout.cf.taste.impl.similarity.PearsonCorrelationSimilarity;
@@ -51,7 +52,7 @@ public class MahoutItemSimilarity {
 			pref4.add(new GenericPreference(3, 1, 1.0f));
 			pref4.add(new GenericPreference(3, 2, -1.0f));
 			pref4.add(new GenericPreference(3, 3, 1.0f));
-			pref4.add(new GenericPreference(3, 4, -1.0f));
+			pref4.add(new GenericPreference(3, 4, 1.0f));
 			pref4.add(new GenericPreference(3, 5, -1.0f));
 
 			userData.put(0, new GenericUserPreferenceArray(pref1));
@@ -63,7 +64,7 @@ public class MahoutItemSimilarity {
 
 			UserSimilarity similarity = new PearsonCorrelationSimilarity(model);
 
-			UserNeighborhood neighborhood = new ThresholdUserNeighborhood(-1.0, similarity, model);
+			UserNeighborhood neighborhood = new NearestNUserNeighborhood(10, similarity, model);
 
 			UserBasedRecommender recommender = new GenericUserBasedRecommender(model, neighborhood, similarity);
 

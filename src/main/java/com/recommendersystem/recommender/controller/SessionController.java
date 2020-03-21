@@ -3,10 +3,13 @@ package com.recommendersystem.recommender.controller;
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
+
 import com.google.common.hash.Hashing;
 import com.recommendersystem.recommender.models.Session;
 import com.recommendersystem.recommender.models.User;
 
+@CrossOrigin
 public class SessionController {
 	public static Session createSession(User user) {
 		Session session = new Session();

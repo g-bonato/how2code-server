@@ -3,13 +3,24 @@ package com.recommendersystem.recommender.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
 import com.recommendersystem.recommender.models.LearningMaterial;
 import com.recommendersystem.recommender.models.Rating;
 
-public interface RatingRepository extends MongoRepository<Rating, String> {
+public interface RatingRepository extends PagingAndSortingRepository<Rating, String> {
+
+	public static class PageSpecification {
+		public static Pageable constructPageSpecification(final int pageIndex, final int pageSize) {
+			Pageable pageSpecification = PageRequest.of(pageIndex, pageSize);
+			return pageSpecification;
+		}
+	}
+
 	@Override
 	public Optional<Rating> findById(String id);
 
